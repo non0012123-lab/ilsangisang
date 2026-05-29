@@ -1,14 +1,346 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ko">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
+  <title>일상이상 - 마케팅 관리 플랫폼</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="/style.css" rel="stylesheet">
 </head>
 <body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+
+<!-- ====== 로그인 화면 ====== -->
+<div id="screen-login" class="screen active">
+  <div class="login-bg">
+    <div class="login-container">
+      <div class="login-brand">
+        <div class="brand-logo">일상이상</div>
+        <p class="brand-tagline">마케팅 프로젝트 통합 관리 플랫폼</p>
+      </div>
+      <div class="login-card">
+        <div class="login-tabs">
+          <button class="login-tab active" onclick="switchLoginTab('admin', this)">관리자 로그인</button>
+          <button class="login-tab" onclick="switchLoginTab('client', this)">클라이언트 로그인</button>
+        </div>
+        <form class="login-form" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label>이메일</label>
+            <input type="email" id="login-email" placeholder="이메일을 입력하세요" />
+          </div>
+          <div class="form-group">
+            <label>비밀번호</label>
+            <input type="password" id="login-password" placeholder="비밀번호를 입력하세요" />
+          </div>
+          <div class="demo-hint">
+            💡 데모 체험: 아무 값이나 입력 후 로그인 클릭
+          </div>
+          <button type="submit" class="btn-login">로그인</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 관리자 화면 ====== -->
+<div id="screen-admin" class="screen">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-logo">일상이상</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">메인</div>
+      <a class="nav-item active" onclick="showSection('dashboard', this)">
+        <span class="nav-icon">📊</span><span>대시보드</span>
+      </a>
+      <a class="nav-item" onclick="showSection('schedule', this)">
+        <span class="nav-icon">📅</span><span>스케줄 관리</span>
+      </a>
+      <a class="nav-item" onclick="showSection('tasks', this)">
+        <span class="nav-icon">✅</span><span>작업물 관리</span>
+      </a>
+      <div class="nav-label">관리</div>
+      <a class="nav-item" onclick="showSection('clients', this)">
+        <span class="nav-icon">🏢</span><span>클라이언트</span>
+      </a>
+      <a class="nav-item" onclick="showSection('reports', this)">
+        <span class="nav-icon">📈</span><span>리포트</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-profile">
+        <div class="user-avatar">관</div>
+        <div>
+          <div class="user-name">관리자</div>
+          <div class="user-role">Admin</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()">로그아웃</button>
+    </div>
+  </aside>
+
+  <div class="main-wrap">
+    <header class="top-header">
+      <h1 class="page-title" id="page-title">대시보드</h1>
+      <div class="header-right">
+        <div class="notif-btn">🔔 <span class="notif-badge">3</span></div>
+        <button class="btn-primary" onclick="openModal()">+ 새 작업 추가</button>
+      </div>
+    </header>
+
+    <!-- 대시보드 -->
+    <section id="sec-dashboard" class="content active">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon blue">🏢</div>
+          <div><div class="stat-num">12</div><div class="stat-lbl">전체 클라이언트</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon yellow">⚡</div>
+          <div><div class="stat-num">28</div><div class="stat-lbl">진행 중인 작업</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">✅</div>
+          <div><div class="stat-num">143</div><div class="stat-lbl">완료된 작업</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">🔔</div>
+          <div><div class="stat-num">5</div><div class="stat-lbl">이번 주 마감</div></div>
+        </div>
+      </div>
+      <div class="dash-grid">
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">최근 작업 현황</span>
+            <span class="card-link" onclick="showSection('tasks', null)">전체 보기 →</span>
+          </div>
+          <div id="dash-tasks"></div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <span class="card-title">이번 주 마감 스케줄</span>
+            <span class="card-link" onclick="showSection('schedule', null)">전체 보기 →</span>
+          </div>
+          <div id="dash-schedule"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 스케줄 관리 -->
+    <section id="sec-schedule" class="content">
+      <div class="toolbar">
+        <div class="filter-row">
+          <select class="sel" id="filter-client-sch">
+            <option value="">전체 클라이언트</option>
+            <option>홍길동 쇼핑몰</option>
+            <option>ABC 뷰티</option>
+            <option>XYZ 푸드</option>
+            <option>미래 패션</option>
+          </select>
+          <select class="sel" id="filter-status-sch">
+            <option value="">전체 상태</option>
+            <option value="waiting">대기 중</option>
+            <option value="in-progress">진행 중</option>
+            <option value="review">검토 중</option>
+            <option value="completed">완료</option>
+          </select>
+        </div>
+        <button class="btn-primary" onclick="openModal()">+ 스케줄 추가</button>
+      </div>
+      <div class="card">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>클라이언트</th><th>작업명</th><th>카테고리</th>
+              <th>시작일</th><th>마감일</th><th>담당자</th><th>상태</th><th>액션</th>
+            </tr>
+          </thead>
+          <tbody id="schedule-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 작업물 관리 -->
+    <section id="sec-tasks" class="content">
+      <div class="toolbar">
+        <div class="filter-row">
+          <select class="sel">
+            <option>전체 클라이언트</option>
+            <option>홍길동 쇼핑몰</option>
+            <option>ABC 뷰티</option>
+            <option>XYZ 푸드</option>
+          </select>
+        </div>
+        <button class="btn-primary" onclick="openModal()">+ 작업 추가</button>
+      </div>
+      <div class="kanban">
+        <div class="k-col">
+          <div class="k-head waiting">대기 중 <span class="k-cnt" id="cnt-waiting">0</span></div>
+          <div class="k-cards" id="k-waiting"></div>
+        </div>
+        <div class="k-col">
+          <div class="k-head in-progress">진행 중 <span class="k-cnt" id="cnt-in-progress">0</span></div>
+          <div class="k-cards" id="k-in-progress"></div>
+        </div>
+        <div class="k-col">
+          <div class="k-head review">검토 중 <span class="k-cnt" id="cnt-review">0</span></div>
+          <div class="k-cards" id="k-review"></div>
+        </div>
+        <div class="k-col">
+          <div class="k-head completed">완료 <span class="k-cnt" id="cnt-completed">0</span></div>
+          <div class="k-cards" id="k-completed"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 클라이언트 -->
+    <section id="sec-clients" class="content">
+      <div class="clients-grid" id="clients-grid"></div>
+    </section>
+
+    <!-- 리포트 -->
+    <section id="sec-reports" class="content">
+      <div class="reports-wrap">
+        <div class="report-banner">
+          <div class="report-banner-icon">📈</div>
+          <div>
+            <h2>5월 통합 성과 리포트</h2>
+            <p>2026년 5월 1일 ~ 5월 31일 기준</p>
+          </div>
+          <button class="btn-primary" style="margin-left:auto">PDF 다운로드</button>
+        </div>
+        <div class="report-kpi-grid">
+          <div class="kpi-card"><div class="kpi-val green">117%</div><div class="kpi-lbl">KPI 달성률</div></div>
+          <div class="kpi-card"><div class="kpi-val blue">+2,340</div><div class="kpi-lbl">신규 팔로워</div></div>
+          <div class="kpi-card"><div class="kpi-val yellow">380%</div><div class="kpi-lbl">평균 ROAS</div></div>
+          <div class="kpi-card"><div class="kpi-val">143</div><div class="kpi-lbl">완료 작업</div></div>
+        </div>
+        <div class="dash-grid">
+          <div class="card">
+            <div class="card-head"><span class="card-title">클라이언트별 완료 작업</span></div>
+            <div class="report-bar-list" id="report-bars"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">카테고리 분포</span></div>
+            <div class="report-cat-list" id="report-cats"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ====== 클라이언트 포털 ====== -->
+<div id="screen-client" class="screen">
+  <header class="client-header">
+    <div class="ch-brand">일상이상</div>
+    <div class="ch-company">🏢 <span id="portal-company">홍길동 쇼핑몰</span></div>
+    <button class="btn-outline" onclick="logout()">로그아웃</button>
+  </header>
+
+  <div class="portal-body">
+    <div class="portal-welcome">
+      <h1>안녕하세요, <span id="portal-name">홍길동</span> 님 👋</h1>
+      <p>현재 진행 중인 마케팅 프로젝트 현황입니다.</p>
+    </div>
+
+    <div class="portal-stats">
+      <div class="ps-card">
+        <div class="ps-num blue" id="ps-scheduled">8</div>
+        <div class="ps-lbl">이번 달 예정 작업</div>
+      </div>
+      <div class="ps-card">
+        <div class="ps-num yellow" id="ps-inprogress">3</div>
+        <div class="ps-lbl">진행 중</div>
+      </div>
+      <div class="ps-card">
+        <div class="ps-num green" id="ps-completed">23</div>
+        <div class="ps-lbl">완료된 작업</div>
+      </div>
+    </div>
+
+    <div class="portal-card">
+      <div class="portal-tabs">
+        <button class="ptab active" onclick="switchPortalTab('schedule', this)">📅 마케팅 스케줄</button>
+        <button class="ptab" onclick="switchPortalTab('inprogress', this)">⚡ 진행 중인 작업</button>
+        <button class="ptab" onclick="switchPortalTab('done', this)">✅ 완료된 작업</button>
+      </div>
+
+      <div id="ptab-schedule" class="ptab-content active">
+        <table class="tbl">
+          <thead>
+            <tr><th>작업명</th><th>카테고리</th><th>시작일</th><th>마감일</th><th>담당자</th><th>상태</th></tr>
+          </thead>
+          <tbody id="portal-schedule-tbody"></tbody>
+        </table>
+      </div>
+
+      <div id="ptab-inprogress" class="ptab-content">
+        <div class="deliverables" id="portal-inprogress-grid"></div>
+      </div>
+
+      <div id="ptab-done" class="ptab-content">
+        <div class="deliverables" id="portal-done-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 모달 -->
+<div id="modal-overlay" class="modal-overlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3>새 작업 추가</h3>
+      <button class="modal-x" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>클라이언트</label>
+        <select class="form-input">
+          <option>홍길동 쇼핑몰</option><option>ABC 뷰티</option><option>XYZ 푸드</option><option>미래 패션</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>작업명</label>
+        <input type="text" class="form-input" placeholder="예) 6월 SNS 콘텐츠 제작" />
+      </div>
+      <div class="form-group">
+        <label>카테고리</label>
+        <select class="form-input">
+          <option>SNS 콘텐츠</option><option>광고 운영</option><option>영상 제작</option>
+          <option>디자인</option><option>리포트</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>시작일</label>
+          <input type="date" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>마감일</label>
+          <input type="date" class="form-input" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>담당자</label>
+        <select class="form-input">
+          <option>김민준</option><option>이서연</option><option>박지호</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>상태</label>
+        <select class="form-input">
+          <option value="waiting">대기 중</option><option value="in-progress">진행 중</option>
+          <option value="review">검토 중</option><option value="completed">완료</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-outline" onclick="closeModal()">취소</button>
+      <button class="btn-primary" onclick="closeModal()">추가하기</button>
+    </div>
+  </div>
+</div>
+
+<script src="/main.js"></script>
 </body>
 </html>
