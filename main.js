@@ -106,10 +106,13 @@ function logout() {
 // ADMIN SECTIONS
 // =====================
 function showSection(sec, el) {
-  if (el) {
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    el.classList.add('active');
-  }
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.remove('active');
+    if (!el && n.getAttribute('onclick') && n.getAttribute('onclick').includes(`'${sec}'`)) {
+      n.classList.add('active');
+    }
+  });
+  if (el) el.classList.add('active');
   document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
   document.getElementById('sec-' + sec).classList.add('active');
   const titles = { dashboard:'대시보드', schedule:'스케줄 관리', tasks:'작업물 관리', rankings:'네이버 순위', clients:'클라이언트', reports:'리포트' };
@@ -252,7 +255,9 @@ function onDragOver(e) {
 }
 
 function onDragLeave(e) {
-  e.currentTarget.classList.remove('drag-over');
+  if (!e.currentTarget.contains(e.relatedTarget)) {
+    e.currentTarget.classList.remove('drag-over');
+  }
 }
 
 function onDrop(e, status) {
@@ -428,9 +433,12 @@ function renderDetailScreenshots() {
     return;
   }
   grid.innerHTML = t.screenshots.map((src, i) => `
-    <div class="ss-grid-thumb" onclick="previewImage('${src}')">
+    <div class="ss-grid-thumb" data-idx="${i}">
       <img src="${src}" alt="캡처본 ${i+1}" />
     </div>`).join('');
+  grid.querySelectorAll('.ss-grid-thumb').forEach((el, i) => {
+    el.addEventListener('click', () => previewImage(t.screenshots[i]));
+  });
 }
 
 function addScreenshotToTask(e) {
