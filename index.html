@@ -23,14 +23,8 @@
           <button class="login-tab" onclick="switchLoginTab('client',this)">클라이언트 로그인</button>
         </div>
         <form onsubmit="handleLogin(event)">
-          <div class="form-group">
-            <label>이메일</label>
-            <input type="email" id="login-email" placeholder="이메일을 입력하세요" />
-          </div>
-          <div class="form-group">
-            <label>비밀번호</label>
-            <input type="password" id="login-password" placeholder="비밀번호를 입력하세요" />
-          </div>
+          <div class="form-group"><label>이메일</label><input type="email" id="login-email" placeholder="이메일을 입력하세요" /></div>
+          <div class="form-group"><label>비밀번호</label><input type="password" id="login-password" placeholder="비밀번호를 입력하세요" /></div>
           <div class="demo-hint">💡 데모 체험: 아무 값이나 입력 후 로그인 클릭</div>
           <button type="submit" class="btn-login">로그인</button>
         </form>
@@ -48,7 +42,9 @@
       <a class="nav-item active" onclick="showSection('dashboard',this)"><span class="nav-icon">📊</span><span>대시보드</span></a>
       <a class="nav-item" onclick="showSection('schedule',this)"><span class="nav-icon">📅</span><span>스케줄 관리</span></a>
       <a class="nav-item" onclick="showSection('tasks',this)"><span class="nav-icon">✅</span><span>작업물 관리</span></a>
+      <div class="nav-label">네이버</div>
       <a class="nav-item" onclick="showSection('rankings',this)"><span class="nav-icon">📊</span><span>네이버 순위</span></a>
+      <a class="nav-item" onclick="showSection('yoron',this)"><span class="nav-icon">💬</span><span>여론 작업</span></a>
       <div class="nav-label">관리</div>
       <a class="nav-item" onclick="showSection('clients',this)"><span class="nav-icon">🏢</span><span>클라이언트</span></a>
       <a class="nav-item" onclick="showSection('reports',this)"><span class="nav-icon">📈</span><span>리포트</span></a>
@@ -75,9 +71,9 @@
     <section id="sec-dashboard" class="content active">
       <div class="stats-row">
         <div class="stat-card"><div class="stat-icon blue">🏢</div><div><div class="stat-num">12</div><div class="stat-lbl">전체 클라이언트</div></div></div>
-        <div class="stat-card"><div class="stat-icon yellow">⚡</div><div><div class="stat-num">28</div><div class="stat-lbl">진행 중인 작업</div></div></div>
-        <div class="stat-card"><div class="stat-icon green">✅</div><div><div class="stat-num">143</div><div class="stat-lbl">완료된 작업</div></div></div>
-        <div class="stat-card"><div class="stat-icon red">🔔</div><div><div class="stat-num">5</div><div class="stat-lbl">이번 주 마감</div></div></div>
+        <div class="stat-card"><div class="stat-icon yellow">⚡</div><div><div class="stat-num" id="dash-inprogress-cnt">0</div><div class="stat-lbl">진행 중인 작업</div></div></div>
+        <div class="stat-card"><div class="stat-icon green">✅</div><div><div class="stat-num" id="dash-done-cnt">0</div><div class="stat-lbl">완료된 작업</div></div></div>
+        <div class="stat-card"><div class="stat-icon naver">💬</div><div><div class="stat-num" id="dash-yoron-cnt">0</div><div class="stat-lbl">여론작업</div></div></div>
       </div>
       <div class="dash-grid">
         <div class="card">
@@ -102,13 +98,13 @@
       </div>
       <div class="card">
         <table class="tbl">
-          <thead><tr><th>클라이언트</th><th>작업명</th><th>카테고리</th><th>시작일</th><th>마감일</th><th>담당자</th><th>순위</th><th>상태</th><th>액션</th></tr></thead>
+          <thead><tr><th>클라이언트</th><th>작업명</th><th>카테고리</th><th>포스팅 링크</th><th>시작일</th><th>마감일</th><th>담당자</th><th>순위</th><th>상태</th><th>액션</th></tr></thead>
           <tbody id="schedule-tbody"></tbody>
         </table>
       </div>
     </section>
 
-    <!-- 작업물 관리 (칸반) -->
+    <!-- 작업물 관리 -->
     <section id="sec-tasks" class="content">
       <div class="toolbar">
         <div class="filter-row">
@@ -148,10 +144,22 @@
       </div>
       <div class="card">
         <table class="tbl">
-          <thead><tr><th>클라이언트</th><th>작업명</th><th>플랫폼</th><th>키워드</th><th>현재 순위</th><th>이전 순위</th><th>변동</th><th>포스팅 링크</th><th>확인일</th></tr></thead>
+          <thead><tr><th>클라이언트</th><th>작업명</th><th>플랫폼</th><th>키워드</th><th>현재 순위</th><th>이전 순위</th><th>변동</th><th>포스팅 링크</th><th>확인일</th><th>액션</th></tr></thead>
           <tbody id="rankings-tbody"></tbody>
         </table>
       </div>
+    </section>
+
+    <!-- 여론 작업 -->
+    <section id="sec-yoron" class="content">
+      <div class="toolbar">
+        <div class="filter-row">
+          <select class="sel"><option>전체 클라이언트</option><option>홍길동 쇼핑몰</option><option>ABC 뷰티</option><option>XYZ 푸드</option></select>
+          <select class="sel"><option>전체 상태</option><option>대기 중</option><option>진행 중</option><option>완료</option></select>
+        </div>
+        <button class="btn-primary" onclick="openAddModal()">+ 여론작업 추가</button>
+      </div>
+      <div class="yoron-grid" id="yoron-grid"></div>
     </section>
 
     <!-- 클라이언트 -->
@@ -165,7 +173,7 @@
         <div class="report-banner">
           <div class="report-banner-icon">📈</div>
           <div><h2>5월 통합 성과 리포트</h2><p>2026년 5월 1일 ~ 5월 31일 기준</p></div>
-          <button class="btn-white" style="margin-left:auto" onclick="downloadAdminReport()">📥 PDF 다운로드</button>
+          <button class="btn-white" style="margin-left:auto" onclick="downloadAdminReport()">📥 보고서 다운로드</button>
         </div>
         <div class="report-kpi-grid">
           <div class="kpi-card"><div class="kpi-val green">117%</div><div class="kpi-lbl">KPI 달성률</div></div>
@@ -218,7 +226,7 @@
 
       <div id="ptab-schedule" class="ptab-content active">
         <table class="tbl">
-          <thead><tr><th>작업명</th><th>카테고리</th><th>시작일</th><th>마감일</th><th>담당자</th><th>상태</th></tr></thead>
+          <thead><tr><th>작업명</th><th>카테고리</th><th>포스팅 링크</th><th>시작일</th><th>마감일</th><th>담당자</th><th>상태</th></tr></thead>
           <tbody id="portal-schedule-tbody"></tbody>
         </table>
       </div>
@@ -237,7 +245,7 @@
           <div class="naver-rank-date">최종 업데이트: 2026-05-29</div>
         </div>
         <table class="tbl">
-          <thead><tr><th>키워드</th><th>플랫폼</th><th>현재 순위</th><th>이전 순위</th><th>변동</th><th>포스팅 링크</th><th>확인일</th></tr></thead>
+          <thead><tr><th>키워드</th><th>플랫폼</th><th>현재 순위</th><th>이전 순위</th><th>변동</th><th>포스팅 바로가기</th><th>확인일</th></tr></thead>
           <tbody id="portal-rankings-tbody"></tbody>
         </table>
       </div>
@@ -245,23 +253,23 @@
   </div>
 </div>
 
-<!-- ====== 작업 추가 모달 ====== -->
+<!-- ====== 작업 추가/수정 모달 ====== -->
 <div id="add-modal-overlay" class="modal-overlay" onclick="closeAddModal()">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-head">
-      <h3>새 작업 추가</h3>
+      <h3 id="modal-title">새 작업 추가</h3>
       <button class="modal-x" onclick="closeAddModal()">✕</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
         <label>클라이언트</label>
-        <select class="form-input">
+        <select class="form-input" id="modal-client">
           <option>홍길동 쇼핑몰</option><option>ABC 뷰티</option><option>XYZ 푸드</option><option>미래 패션</option>
         </select>
       </div>
       <div class="form-group">
-        <label>작업명</label>
-        <input type="text" class="form-input" placeholder="예) 6월 블로그 포스팅 작성" />
+        <label>작업명 <span class="required">*</span></label>
+        <input type="text" class="form-input" id="modal-name" placeholder="예) 6월 블로그 포스팅 작성" />
       </div>
       <div class="form-group">
         <label>카테고리</label>
@@ -270,64 +278,75 @@
             <option>SNS 콘텐츠</option><option>광고 운영</option><option>영상 제작</option><option>디자인</option><option>리포트</option>
           </optgroup>
           <optgroup label="네이버">
-            <option>네이버 블로그</option><option>네이버 카페</option><option>네이버 지식인</option>
+            <option>네이버 블로그</option><option>네이버 카페</option><option>네이버 지식인</option><option>네이버 여론작업</option>
           </optgroup>
         </select>
       </div>
 
-      <!-- 네이버 전용 필드 -->
+      <!-- 네이버 공통 필드 -->
       <div id="naver-fields" class="naver-fields-wrap" style="display:none">
         <div class="naver-fields-title">🟢 네이버 정보</div>
         <div class="form-group">
           <label>포스팅 URL</label>
           <input type="url" class="form-input" id="modal-url" placeholder="https://blog.naver.com/..." />
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>타겟 키워드</label>
-            <input type="text" class="form-input" id="modal-keyword" placeholder="예) 여름 원피스 추천" />
+
+        <!-- 순위 필드 (블로그·카페·지식인) -->
+        <div id="rank-fields" style="display:none">
+          <div class="form-row">
+            <div class="form-group">
+              <label>타겟 키워드</label>
+              <input type="text" class="form-input" id="modal-keyword" placeholder="예) 여름 원피스 추천" />
+            </div>
+            <div class="form-group">
+              <label>현재 순위</label>
+              <input type="number" class="form-input" id="modal-rank" placeholder="순위" min="1" />
+            </div>
           </div>
           <div class="form-group">
-            <label>현재 순위</label>
-            <input type="number" class="form-input" id="modal-rank" placeholder="순위 입력" min="1" />
+            <label>이전 순위 (선택)</label>
+            <input type="number" class="form-input" id="modal-prev-rank" placeholder="이전 순위 — 변동 비교용" min="1" />
           </div>
         </div>
-        <div class="form-group">
-          <label>이전 순위 (선택)</label>
-          <input type="number" class="form-input" id="modal-prev-rank" placeholder="이전 순위 (변동 비교용)" min="1" />
+
+        <!-- 여론작업 전용 -->
+        <div id="yoron-fields" style="display:none">
+          <div class="form-group">
+            <label>포스팅 제목</label>
+            <input type="text" class="form-input" id="modal-yoron-title" placeholder="여론 포스팅 제목" />
+          </div>
+          <div class="form-group">
+            <label>포스팅 내용</label>
+            <textarea class="form-input form-textarea" id="modal-yoron-content" rows="4" placeholder="포스팅 내용을 입력하세요"></textarea>
+          </div>
+          <div class="form-group">
+            <label>댓글 내용 <span class="field-hint">(줄바꿈으로 각 댓글 구분)</span></label>
+            <textarea class="form-input form-textarea" id="modal-yoron-comments" rows="3" placeholder="댓글 1&#10;댓글 2&#10;댓글 3"></textarea>
+          </div>
         </div>
       </div>
 
       <div class="form-row">
-        <div class="form-group"><label>시작일</label><input type="date" class="form-input" /></div>
-        <div class="form-group"><label>마감일</label><input type="date" class="form-input" /></div>
+        <div class="form-group"><label>시작일</label><input type="date" class="form-input" id="modal-start" /></div>
+        <div class="form-group"><label>마감일</label><input type="date" class="form-input" id="modal-due" /></div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label>담당자</label>
-          <select class="form-input"><option>김민준</option><option>이서연</option><option>박지호</option></select>
+          <select class="form-input" id="modal-assignee"><option>김민준</option><option>이서연</option><option>박지호</option></select>
         </div>
         <div class="form-group">
           <label>상태</label>
-          <select class="form-input"><option value="waiting">대기 중</option><option value="in-progress">진행 중</option><option value="review">검토 중</option><option value="completed">완료</option></select>
+          <select class="form-input" id="modal-status">
+            <option value="waiting">대기 중</option><option value="in-progress">진행 중</option>
+            <option value="review">검토 중</option><option value="completed">완료</option>
+          </select>
         </div>
-      </div>
-
-      <!-- 캡처본 업로드 -->
-      <div class="form-group">
-        <label>캡처본 첨부</label>
-        <div class="ss-upload-area" onclick="document.getElementById('add-ss-input').click()">
-          <div class="ss-upload-icon">📷</div>
-          <div class="ss-upload-text">클릭하여 이미지 추가</div>
-          <div class="ss-upload-hint">PNG, JPG, GIF 지원 · 여러 장 선택 가능</div>
-          <input type="file" id="add-ss-input" accept="image/*" multiple onchange="previewAddScreenshots(event)" style="display:none" />
-        </div>
-        <div class="ss-preview-grid" id="add-ss-previews"></div>
       </div>
     </div>
     <div class="modal-foot">
       <button class="btn-outline" onclick="closeAddModal()">취소</button>
-      <button class="btn-primary" onclick="closeAddModal()">추가하기</button>
+      <button class="btn-primary" onclick="saveModal()">저장하기</button>
     </div>
   </div>
 </div>
@@ -345,14 +364,24 @@
     <div class="modal-body">
       <div class="dm-meta" id="dm-meta"></div>
       <div class="dm-naver" id="dm-naver" style="display:none"></div>
+      <div class="dm-yoron" id="dm-yoron" style="display:none"></div>
       <div class="dm-section">
-        <div class="dm-sec-title">캡처본</div>
+        <div class="dm-sec-title">
+          캡처본
+          <span class="dm-sec-hint">SEO 완료 후 순위권 진입 시 추가하세요</span>
+        </div>
         <div class="ss-grid" id="dm-ss-grid"></div>
         <label class="ss-add-btn">
           <input type="file" accept="image/*" multiple onchange="addScreenshotToTask(event)" style="display:none" />
           📷 캡처본 추가
         </label>
       </div>
+    </div>
+    <div class="modal-foot detail-foot">
+      <button class="btn-danger-outline" onclick="deleteCurrentTask()">🗑 삭제</button>
+      <div style="flex:1"></div>
+      <button class="btn-outline" onclick="closeDetail()">닫기</button>
+      <button class="btn-primary" onclick="openEditFromDetail()">✏ 수정</button>
     </div>
   </div>
 </div>
