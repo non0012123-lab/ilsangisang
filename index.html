@@ -40,6 +40,7 @@
     <nav class="sidebar-nav">
       <div class="nav-label">메인</div>
       <a class="nav-item active" onclick="showSection('dashboard',this)"><span class="nav-icon">📊</span><span>대시보드</span></a>
+      <a class="nav-item" onclick="showSection('daily',this)"><span class="nav-icon">📋</span><span>일일스케줄표</span></a>
       <a class="nav-item" onclick="showSection('schedule',this)"><span class="nav-icon">📅</span><span>스케줄 관리</span></a>
       <a class="nav-item" onclick="showSection('tasks',this)"><span class="nav-icon">✅</span><span>작업물 관리</span></a>
       <div class="nav-label">네이버</div>
@@ -47,12 +48,13 @@
       <a class="nav-item" onclick="showSection('yoron',this)"><span class="nav-icon">💬</span><span>여론 작업</span></a>
       <div class="nav-label">관리</div>
       <a class="nav-item" onclick="showSection('clients',this)"><span class="nav-icon">🏢</span><span>클라이언트</span></a>
+      <a class="nav-item" onclick="showSection('team',this)"><span class="nav-icon">👥</span><span>팀 관리</span></a>
       <a class="nav-item" onclick="showSection('reports',this)"><span class="nav-icon">📈</span><span>리포트</span></a>
     </nav>
     <div class="sidebar-footer">
       <div class="user-profile">
-        <div class="user-avatar">관</div>
-        <div><div class="user-name">관리자</div><div class="user-role">Admin</div></div>
+        <div class="user-avatar" id="sidebar-avatar">관</div>
+        <div><div class="user-name" id="sidebar-name">관리자</div><div class="user-role" id="sidebar-role">Admin</div></div>
       </div>
       <button class="btn-logout" onclick="logout()">로그아웃</button>
     </div>
@@ -70,7 +72,7 @@
     <!-- 대시보드 -->
     <section id="sec-dashboard" class="content active">
       <div class="stats-row">
-        <div class="stat-card"><div class="stat-icon blue">🏢</div><div><div class="stat-num">12</div><div class="stat-lbl">전체 클라이언트</div></div></div>
+        <div class="stat-card"><div class="stat-icon blue">🏢</div><div><div class="stat-num" id="dash-client-cnt">0</div><div class="stat-lbl">전체 클라이언트</div></div></div>
         <div class="stat-card"><div class="stat-icon yellow">⚡</div><div><div class="stat-num" id="dash-inprogress-cnt">0</div><div class="stat-lbl">진행 중인 작업</div></div></div>
         <div class="stat-card"><div class="stat-icon green">✅</div><div><div class="stat-num" id="dash-done-cnt">0</div><div class="stat-lbl">완료된 작업</div></div></div>
         <div class="stat-card"><div class="stat-icon naver">💬</div><div><div class="stat-num" id="dash-yoron-cnt">0</div><div class="stat-lbl">여론작업</div></div></div>
@@ -87,12 +89,45 @@
       </div>
     </section>
 
+    <!-- 일일스케줄표 -->
+    <section id="sec-daily" class="content">
+      <div class="toolbar">
+        <div class="filter-row">
+          <input type="date" class="sel" id="daily-date" onchange="renderDaily()" />
+          <select class="sel assignee-filter-select" id="daily-f-assignee" onchange="renderDaily()">
+            <option value="">전체 담당자</option>
+          </select>
+        </div>
+        <button class="btn-primary" onclick="openLogModal()">+ 업무 로그 추가</button>
+      </div>
+      <div id="daily-date-label" class="daily-date-label"></div>
+      <div class="daily-grid">
+        <div>
+          <div class="daily-section-title">📌 오늘 마감 예정</div>
+          <div id="daily-due-list"></div>
+        </div>
+        <div>
+          <div class="daily-section-title">📝 업무 로그</div>
+          <div id="daily-log-list"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- 스케줄 관리 -->
     <section id="sec-schedule" class="content">
       <div class="toolbar">
         <div class="filter-row">
-          <select class="sel"><option value="">전체 클라이언트</option><option>홍길동 쇼핑몰</option><option>ABC 뷰티</option><option>XYZ 푸드</option></select>
-          <select class="sel"><option value="">전체 상태</option><option>대기 중</option><option>진행 중</option><option>검토 중</option><option>완료</option></select>
+          <select class="sel client-filter-select" id="sch-f-client" onchange="renderSchedule()"><option value="">전체 클라이언트</option></select>
+          <select class="sel" id="sch-f-status" onchange="renderSchedule()">
+            <option value="">전체 상태</option>
+            <option value="waiting">대기 중</option><option value="in-progress">진행 중</option>
+            <option value="review">검토 중</option><option value="completed">완료</option>
+          </select>
+          <select class="sel" id="sch-f-category" onchange="renderSchedule()">
+            <option value="">전체 카테고리</option>
+            <option>SNS 콘텐츠</option><option>광고 운영</option><option>영상 제작</option><option>디자인</option><option>리포트</option>
+            <option>네이버 블로그</option><option>네이버 카페</option><option>네이버 지식인</option><option>네이버 여론작업</option>
+          </select>
         </div>
         <button class="btn-primary" onclick="openAddModal()">+ 스케줄 추가</button>
       </div>
@@ -108,7 +143,12 @@
     <section id="sec-tasks" class="content">
       <div class="toolbar">
         <div class="filter-row">
-          <select class="sel"><option>전체 클라이언트</option><option>홍길동 쇼핑몰</option><option>ABC 뷰티</option><option>XYZ 푸드</option></select>
+          <select class="sel client-filter-select" id="kb-f-client" onchange="renderKanban()"><option value="">전체 클라이언트</option></select>
+          <select class="sel" id="kb-f-category" onchange="renderKanban()">
+            <option value="">전체 카테고리</option>
+            <option>SNS 콘텐츠</option><option>광고 운영</option><option>영상 제작</option><option>디자인</option><option>리포트</option>
+            <option>네이버 블로그</option><option>네이버 카페</option><option>네이버 지식인</option><option>네이버 여론작업</option>
+          </select>
         </div>
         <div class="toolbar-hint">💡 카드를 드래그하여 상태를 변경하세요</div>
         <button class="btn-primary" onclick="openAddModal()">+ 작업 추가</button>
@@ -137,8 +177,11 @@
     <section id="sec-rankings" class="content">
       <div class="toolbar">
         <div class="filter-row">
-          <select class="sel"><option>전체 클라이언트</option><option>홍길동 쇼핑몰</option><option>ABC 뷰티</option><option>XYZ 푸드</option></select>
-          <select class="sel"><option>전체 플랫폼</option><option>네이버 블로그</option><option>네이버 카페</option><option>네이버 지식인</option></select>
+          <select class="sel client-filter-select" id="rk-f-client" onchange="renderRankings()"><option value="">전체 클라이언트</option></select>
+          <select class="sel" id="rk-f-platform" onchange="renderRankings()">
+            <option value="">전체 플랫폼</option>
+            <option>네이버 블로그</option><option>네이버 카페</option><option>네이버 지식인</option>
+          </select>
         </div>
         <button class="btn-primary" onclick="openAddModal()">+ 순위 추가</button>
       </div>
@@ -154,8 +197,12 @@
     <section id="sec-yoron" class="content">
       <div class="toolbar">
         <div class="filter-row">
-          <select class="sel"><option>전체 클라이언트</option><option>홍길동 쇼핑몰</option><option>ABC 뷰티</option><option>XYZ 푸드</option></select>
-          <select class="sel"><option>전체 상태</option><option>대기 중</option><option>진행 중</option><option>완료</option></select>
+          <select class="sel client-filter-select" id="yr-f-client" onchange="renderYoron()"><option value="">전체 클라이언트</option></select>
+          <select class="sel" id="yr-f-status" onchange="renderYoron()">
+            <option value="">전체 상태</option>
+            <option value="waiting">대기 중</option><option value="in-progress">진행 중</option>
+            <option value="review">검토 중</option><option value="completed">완료</option>
+          </select>
         </div>
         <button class="btn-primary" onclick="openAddModal()">+ 여론작업 추가</button>
       </div>
@@ -164,7 +211,20 @@
 
     <!-- 클라이언트 -->
     <section id="sec-clients" class="content">
+      <div class="toolbar">
+        <div class="filter-row"></div>
+        <button class="btn-primary" onclick="openClientModal()">+ 클라이언트 추가</button>
+      </div>
       <div class="clients-grid" id="clients-grid"></div>
+    </section>
+
+    <!-- 팀 관리 -->
+    <section id="sec-team" class="content">
+      <div class="toolbar">
+        <div class="filter-row"></div>
+        <button class="btn-primary" id="team-add-btn" onclick="openTeamModal()" style="display:none">+ 담당자 추가</button>
+      </div>
+      <div class="team-grid" id="team-list"></div>
     </section>
 
     <!-- 리포트 -->
@@ -182,14 +242,8 @@
           <div class="kpi-card"><div class="kpi-val">143</div><div class="kpi-lbl">완료 작업</div></div>
         </div>
         <div class="dash-grid">
-          <div class="card">
-            <div class="card-head"><span class="card-title">클라이언트별 완료 작업</span></div>
-            <div class="report-bar-list" id="report-bars"></div>
-          </div>
-          <div class="card">
-            <div class="card-head"><span class="card-title">카테고리 분포</span></div>
-            <div class="report-cat-list" id="report-cats"></div>
-          </div>
+          <div class="card"><div class="card-head"><span class="card-title">클라이언트별 완료 작업</span></div><div class="report-bar-list" id="report-bars"></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">카테고리 분포</span></div><div class="report-cat-list" id="report-cats"></div></div>
         </div>
       </div>
     </section>
@@ -222,23 +276,16 @@
         <button class="ptab" onclick="switchPortalTab('inprogress',this)">⚡ 진행 중인 작업</button>
         <button class="ptab" onclick="switchPortalTab('done',this)">✅ 완료된 작업</button>
         <button class="ptab" onclick="switchPortalTab('naver',this)">📊 네이버 순위</button>
+        <button class="ptab" onclick="switchPortalTab('yoron',this)">💬 여론 작업</button>
       </div>
-
       <div id="ptab-schedule" class="ptab-content active">
         <table class="tbl">
           <thead><tr><th>작업명</th><th>카테고리</th><th>포스팅 링크</th><th>시작일</th><th>마감일</th><th>담당자</th><th>상태</th></tr></thead>
           <tbody id="portal-schedule-tbody"></tbody>
         </table>
       </div>
-
-      <div id="ptab-inprogress" class="ptab-content">
-        <div class="deliverables" id="portal-inprogress-grid"></div>
-      </div>
-
-      <div id="ptab-done" class="ptab-content">
-        <div class="deliverables" id="portal-done-grid"></div>
-      </div>
-
+      <div id="ptab-inprogress" class="ptab-content"><div class="deliverables" id="portal-inprogress-grid"></div></div>
+      <div id="ptab-done" class="ptab-content"><div class="deliverables" id="portal-done-grid"></div></div>
       <div id="ptab-naver" class="ptab-content">
         <div class="naver-rank-header">
           <div class="naver-rank-title">🟢 네이버 키워드 순위 현황</div>
@@ -248,6 +295,12 @@
           <thead><tr><th>키워드</th><th>플랫폼</th><th>현재 순위</th><th>이전 순위</th><th>변동</th><th>포스팅 바로가기</th><th>확인일</th></tr></thead>
           <tbody id="portal-rankings-tbody"></tbody>
         </table>
+      </div>
+      <div id="ptab-yoron" class="ptab-content">
+        <div class="naver-rank-header">
+          <div class="naver-rank-title">💬 네이버 여론 작업 현황</div>
+        </div>
+        <div id="portal-yoron-list"></div>
       </div>
     </div>
   </div>
@@ -263,9 +316,7 @@
     <div class="modal-body">
       <div class="form-group">
         <label>클라이언트</label>
-        <select class="form-input" id="modal-client">
-          <option>홍길동 쇼핑몰</option><option>ABC 뷰티</option><option>XYZ 푸드</option><option>미래 패션</option>
-        </select>
+        <select class="form-input modal-client-select" id="modal-client"></select>
       </div>
       <div class="form-group">
         <label>작업명 <span class="required">*</span></label>
@@ -282,50 +333,28 @@
           </optgroup>
         </select>
       </div>
-
-      <!-- 네이버 공통 필드 -->
       <div id="naver-fields" class="naver-fields-wrap" style="display:none">
         <div class="naver-fields-title">🟢 네이버 정보</div>
         <div class="form-group">
           <label>포스팅 URL</label>
           <input type="url" class="form-input" id="modal-url" placeholder="https://blog.naver.com/..." />
         </div>
-
-        <!-- 순위 필드 (블로그·카페·지식인) -->
         <div id="rank-fields" style="display:none">
           <div class="form-row">
-            <div class="form-group">
-              <label>타겟 키워드</label>
-              <input type="text" class="form-input" id="modal-keyword" placeholder="예) 여름 원피스 추천" />
-            </div>
-            <div class="form-group">
-              <label>현재 순위</label>
-              <input type="number" class="form-input" id="modal-rank" placeholder="순위" min="1" />
-            </div>
+            <div class="form-group"><label>타겟 키워드</label><input type="text" class="form-input" id="modal-keyword" placeholder="예) 여름 원피스 추천" /></div>
+            <div class="form-group"><label>현재 순위</label><input type="number" class="form-input" id="modal-rank" placeholder="순위" min="1" /></div>
           </div>
-          <div class="form-group">
-            <label>이전 순위 (선택)</label>
-            <input type="number" class="form-input" id="modal-prev-rank" placeholder="이전 순위 — 변동 비교용" min="1" />
-          </div>
+          <div class="form-group"><label>이전 순위 (선택)</label><input type="number" class="form-input" id="modal-prev-rank" placeholder="이전 순위 — 변동 비교용" min="1" /></div>
         </div>
-
-        <!-- 여론작업 전용 -->
         <div id="yoron-fields" style="display:none">
-          <div class="form-group">
-            <label>포스팅 제목</label>
-            <input type="text" class="form-input" id="modal-yoron-title" placeholder="여론 포스팅 제목" />
-          </div>
-          <div class="form-group">
-            <label>포스팅 내용</label>
-            <textarea class="form-input form-textarea" id="modal-yoron-content" rows="4" placeholder="포스팅 내용을 입력하세요"></textarea>
-          </div>
+          <div class="form-group"><label>포스팅 제목</label><input type="text" class="form-input" id="modal-yoron-title" placeholder="여론 포스팅 제목" /></div>
+          <div class="form-group"><label>포스팅 내용</label><textarea class="form-input form-textarea" id="modal-yoron-content" rows="4" placeholder="포스팅 내용을 입력하세요"></textarea></div>
           <div class="form-group">
             <label>댓글 내용 <span class="field-hint">(줄바꿈으로 각 댓글 구분)</span></label>
             <textarea class="form-input form-textarea" id="modal-yoron-comments" rows="3" placeholder="댓글 1&#10;댓글 2&#10;댓글 3"></textarea>
           </div>
         </div>
       </div>
-
       <div class="form-row">
         <div class="form-group"><label>시작일</label><input type="date" class="form-input" id="modal-start" /></div>
         <div class="form-group"><label>마감일</label><input type="date" class="form-input" id="modal-due" /></div>
@@ -333,7 +362,7 @@
       <div class="form-row">
         <div class="form-group">
           <label>담당자</label>
-          <select class="form-input" id="modal-assignee"><option>김민준</option><option>이서연</option><option>박지호</option></select>
+          <select class="form-input modal-assignee-select" id="modal-assignee"></select>
         </div>
         <div class="form-group">
           <label>상태</label>
@@ -355,10 +384,7 @@
 <div id="detail-overlay" class="modal-overlay" onclick="closeDetail()">
   <div class="modal detail-modal" onclick="event.stopPropagation()">
     <div class="modal-head">
-      <div>
-        <div class="dm-client" id="dm-client"></div>
-        <h3 id="dm-title"></h3>
-      </div>
+      <div><div class="dm-client" id="dm-client"></div><h3 id="dm-title"></h3></div>
       <button class="modal-x" onclick="closeDetail()">✕</button>
     </div>
     <div class="modal-body">
@@ -366,10 +392,7 @@
       <div class="dm-naver" id="dm-naver" style="display:none"></div>
       <div class="dm-yoron" id="dm-yoron" style="display:none"></div>
       <div class="dm-section">
-        <div class="dm-sec-title">
-          캡처본
-          <span class="dm-sec-hint">SEO 완료 후 순위권 진입 시 추가하세요</span>
-        </div>
+        <div class="dm-sec-title">캡처본<span class="dm-sec-hint">SEO 완료 후 순위권 진입 시 추가하세요</span></div>
         <div class="ss-grid" id="dm-ss-grid"></div>
         <label class="ss-add-btn">
           <input type="file" accept="image/*" multiple onchange="addScreenshotToTask(event)" style="display:none" />
@@ -382,6 +405,98 @@
       <div style="flex:1"></div>
       <button class="btn-outline" onclick="closeDetail()">닫기</button>
       <button class="btn-primary" onclick="openEditFromDetail()">✏ 수정</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 업무 로그 모달 ====== -->
+<div id="log-modal-overlay" class="modal-overlay" onclick="closeLogModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3>업무 로그 추가</h3>
+      <button class="modal-x" onclick="closeLogModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label>날짜</label><input type="date" class="form-input" id="log-date" /></div>
+        <div class="form-group">
+          <label>담당자</label>
+          <select class="form-input modal-assignee-select" id="log-assignee"></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>연동 작업 선택 <span class="field-hint">(기존 작업과 자동 연동)</span></label>
+        <select class="form-input" id="log-task-select">
+          <option value="">— 작업을 선택하세요 —</option>
+        </select>
+      </div>
+      <div class="form-group" id="log-task-preview" style="display:none">
+        <div class="log-task-preview-box" id="log-preview-content"></div>
+      </div>
+      <div class="form-group">
+        <label>업무 내용</label>
+        <textarea class="form-input form-textarea" id="log-notes" rows="3" placeholder="오늘 진행한 업무 내용을 입력하세요"></textarea>
+      </div>
+      <div class="form-group">
+        <label>소요 시간 (시간)</label>
+        <input type="number" class="form-input" id="log-hours" placeholder="예) 2.5" min="0.5" step="0.5" />
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-outline" onclick="closeLogModal()">취소</button>
+      <button class="btn-primary" onclick="saveLog()">저장하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 클라이언트 추가 모달 ====== -->
+<div id="client-modal-overlay" class="modal-overlay" onclick="closeClientModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3 id="client-modal-title">클라이언트 추가</h3>
+      <button class="modal-x" onclick="closeClientModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>업체명 <span class="required">*</span></label><input type="text" class="form-input" id="cl-name" placeholder="예) 홍길동 쇼핑몰" /></div>
+      <div class="form-row">
+        <div class="form-group"><label>업종</label><input type="text" class="form-input" id="cl-type" placeholder="예) 이커머스" /></div>
+        <div class="form-group">
+          <label>이모지/아이콘</label>
+          <select class="form-input" id="cl-emoji">
+            <option>🛍️</option><option>💄</option><option>🍔</option><option>👗</option>
+            <option>💻</option><option>🌿</option><option>🏠</option><option>🚗</option>
+            <option>📚</option><option>🎵</option><option>🏋️</option><option>✈️</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>담당자 이름</label><input type="text" class="form-input" id="cl-contact" placeholder="홍길동" /></div>
+        <div class="form-group"><label>연락처</label><input type="text" class="form-input" id="cl-phone" placeholder="010-0000-0000" /></div>
+      </div>
+      <div class="form-group"><label>이메일</label><input type="email" class="form-input" id="cl-email" placeholder="client@example.com" /></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-outline" onclick="closeClientModal()">취소</button>
+      <button class="btn-primary" onclick="saveClient()">추가하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 담당자 추가 모달 ====== -->
+<div id="team-modal-overlay" class="modal-overlay" onclick="closeTeamModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3>담당자 추가</h3>
+      <button class="modal-x" onclick="closeTeamModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>이름 <span class="required">*</span></label><input type="text" class="form-input" id="tm-name" placeholder="예) 김민준" /></div>
+      <div class="form-group"><label>역할</label><input type="text" class="form-input" id="tm-role" placeholder="예) SNS 콘텐츠 담당" /></div>
+      <div class="form-group"><label>이메일</label><input type="email" class="form-input" id="tm-email" placeholder="name@ilsangisang.com" /></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-outline" onclick="closeTeamModal()">취소</button>
+      <button class="btn-primary" onclick="saveTeamMember()">추가하기</button>
     </div>
   </div>
 </div>
